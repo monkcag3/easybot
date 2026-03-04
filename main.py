@@ -93,10 +93,6 @@ async def on_chat_start():
         actions=actions
     ).send()
 
-    msg = cl.Message(content="")
-    await msg.send()
-    cl.user_session.set("live_msg", msg)
-
 @cl.action_callback("select sound device")
 async def on_sound_device_select(
     action: cl.Action
