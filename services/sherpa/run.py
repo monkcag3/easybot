@@ -47,6 +47,9 @@ def load_env():
     check_second_pass_args()
 
 def create_first_pass_recognizer():
+    # Please replace the model files if needed.
+    # See https://k2-fsa.github.io/sherpa/onnx/pretrained_models/index.html
+    # for download links.
     recognizer = sherpa_onnx.OnlineRecognizer.from_transducer(
         tokens = os.getenv("first-tokens"),
         encoder = os.getenv("first-encoder"),
