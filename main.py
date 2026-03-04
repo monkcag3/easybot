@@ -43,9 +43,14 @@ async def run_audio_recv():
         events = await poller.poll()
         if sub in dict(events):
             [topic, data] = await sub.recv_multipart()
-            # await msg.stream_token(topic.decode("utf-8"))
-            await msg.stream_token(data.decode("utf-8"))
-            await msg.update()
+            if topic == b'audio-text':
+                await msg.stream_token(data.decode("utf-8"))
+                await msg.update()
+            else:
+                msg.content = data.decode("utf-8")
+                await msg.update()
+
+                msg = await cl.Message(content="").send()
 
 
 @cl.on_app_startup
