@@ -1,0 +1,25 @@
+{
+    "agents": {
+        "defaults": {
+            "workspace": ".easybot/workspace",
+            "model": "anthropic/claude-opus-4-5",
+            "provider": "llama-cpp",
+            "maxTokens": 8192,
+            "contextWindowTokens": 65536,
+            "temperature": 0.1,
+            "maxToolIterations": 40,
+            "reasoningEffort": null
+          }
+    },
+    "providers": [
+        {
+            "name": "llama-cpp",
+            "apiKey": "",
+            "apiBase": null,
+            "extraHeaders": {
+                "model_path": "./unsloth/Qwen3-4B-Q2_K_L.gguf",
+                "temp": 1
+            }
+        }
+    ]
+}
