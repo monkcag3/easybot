@@ -69,7 +69,7 @@ async def __init_default_agent_templates__(
         origin = f"{p.name}-{tm_str}"
         hash = hashlib.sha256(origin.encode()).hexdigest()[:24]
         await cursor.execute("INSERT OR IGNORE INTO agent_templates(hash, name, tags, desc, is_local, is_gateway, type) VALUES(?,?,?,?,?,?,?)",
-            (hash, p.display_name, json.dumps(p.keywords), p.desc, p.is_local, p.is_gateway, p.type))
+            (hash, p.display_name, json.dumps(p.keywords), "", p.is_local, p.is_gateway, p.backend))
     await conn.commit()
 
     ## 默认用户

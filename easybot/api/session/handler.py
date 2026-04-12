@@ -81,10 +81,14 @@ async def get_session_messages(
     if before is None: # 首次加载
         sql = """
             SELECT *
-            FROM messages
-            WHERE session_hash = :hash
-            ORDER BY id ASC
-            LIMIT :limit;
+            FROM (
+                SELECT *
+                FROM messages
+                WHERE session_hash = :hash
+                ORDER BY id DESC
+                LIMIT :limit
+            ) AS latest_msgs
+            ORDER BY id ASC;
         """
     else: # 加载历史数据
         sql = """

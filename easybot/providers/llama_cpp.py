@@ -4,10 +4,7 @@ from __future__ import annotations
 import uuid
 import json
 import asyncio
-from typing import Any
-
-import json_repair
-from openai import AsyncOpenAI
+from typing import Any, Awaitable, Callable
 from llama_cpp import Llama
 
 from easybot.providers.base import LLMProvider, LLMResponse, ToolCallRequest
@@ -42,7 +39,9 @@ class LlamaCppProvider(LLMProvider):
         self,
         messages: list[dict[str, Any]],
         tools: list[dict[str, Any]] | None = None,
-        model: str | None = None, max_tokens: int = 4096, temperature: float = 0.7,
+        model: str | None = None,
+        max_tokens: int = 4096,
+        temperature: float = 0.7,
         reasoning_effort: str | None = None,
         tool_choice: str | dict[str, Any] | None = None
     ) -> LLMResponse:
@@ -72,6 +71,57 @@ class LlamaCppProvider(LLMProvider):
             # 5. 返回标准LLMResponse
             return LLMResponse(
                 content=content,
+                tool_calls=tool_calls,
+                finish_reason="stop",
+                usage={}
+            )
+        except Exception as e:
+            logger.error(f"LlamaCpp 推理异常: {str(e)}")
+            return LLMResponse(
+                content=f"本地模型推理失败: {str(e)}",
+                finish_reason="error"
+            )
+
+
+    async def chat_stream(
+        self,
+        messages: list[dict[str, Any]],
+        tools: list[dict[str, Any]] | None = None,
+        model: str | None = None,
+        max_tokens: int = 4096,
+        temperature: float = 0.7,
+        reasoning_effort: str | None = None,
+        tool_choice: str | dict[str, Any] | None = None,
+        on_content_delta: Callable[[str], Awaitable[None]] | None = None,
+    ) -> LLMResponse:
+        try:
+            # 1. 清理消息
+            sanitized = self._sanitize_request_messages(
+                messages, self.ALLOWED_MESSAGE_KEYS
+            )
+            sanitized = self._sanitize_empty_content(sanitized)
+
+            # 2. 构建提示词(支持函数调用)
+            prompt = self._build_chat_prompt(sanitized, tools)
+
+            # 3. 异步执行推理(不阻塞asyncio)
+            stream = self.llm.create_chat_completion(
+                prompt=prompt,
+                temperature=temperature,
+                max_tokens=max_tokens,
+                stop=["<|end|>", "<|user|>", "<|system|>"],
+                stream=True,
+            )
+            async for chunk in stream:
+                print(chunk)
+
+
+                # 4. 解析输出：文本/工具调用
+                content, tool_calls = self._parse_response(chunk.strip(), tools)
+
+            # 5. 返回标准LLMResponse
+            return LLMResponse(
+                content=None,
                 tool_calls=tool_calls,
                 finish_reason="stop",
                 usage={}
